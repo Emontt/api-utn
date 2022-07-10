@@ -12,7 +12,6 @@ const { matchedData } = require("express-validator");
 const public_url = process.env.public_url;
 const { tokenSign, tokenVerify } = require("../utils/handleJWT");
 
-
 //show all users
 const showAll = async (req, res, next) => {
   const dbResponse = await showAllUsers();
@@ -49,7 +48,7 @@ const showOne = async (req, res, next) => {
 //New user
 const createOne = async (req, res, next) => {
   const cleanBody = matchedData(req);
-  const image = public_url + req.file.filename
+  const image = public_url + req.file.filename;
   const password = await encrypt(req.body.password);
   const dbResponse = await addNewUser({ ...cleanBody, password, image });
   if (dbResponse instanceof Error) return next(dbResponse);
@@ -83,64 +82,76 @@ const login = async (req, res, next) => {
 };
 // Servicio mailtrap
 
-const nodemailer = require("nodemailer")
+const nodemailer = require("nodemailer");
 const transport = nodemailer.createTransport({
-    host: "smtp.mailtrap.io",
-    port: 2525,
-    auth: {
-        user: process.env.mail_user,
-        pass: process.env.mail_pass
-    }
+  host: "smtp.mailtrap.io",
+  port: 2525,
+  auth: {
+    user: process.env.mail_user,
+    pass: process.env.mail_pass,
+  },
 });
 
 //Forgot
-const forgot = async(req, res, next) => {
-  const dbResponse = await loginUser(req.body.email)
+const forgot = async (req, res, next) => {
+  console.log("req.body", req.body);
+  const dbResponse = await loginUser(req.body.email);
+  console.log(dbResponse);
   if (!dbResponse.length) return next();
   const user = {
-      id: dbResponse[0].id,
-      name: dbResponse[0].name,
-      email: dbResponse[0].email
-  }
-  const token = await tokenSign(user, '15m')
-  const link = `${public_url}users/reset/${token}`
-
+    id: dbResponse[0].id,
+    name: dbResponse[0].name,
+    email: dbResponse[0].email,
+  };
+  const token = await tokenSign(user, "15m");
+  console.log(token);
+  const link = `${public_url}users/reset/${token}`;
+  console.log(link);
   let mailDetails = {
-      from: "aasd@sasd.com",
-      to: user.email,
-      subject: "Pasword Recovery ",
-      html: `<h2>Password Recovery Service</h2>
+    from: "aasd@sasd.com",
+    to: user.email,
+    subject: "Pasword Recovery ",
+    html: `<h2>Password Recovery Service</h2>
       <p>To reset your password, please click the link and follow the instructions</p>
       <a href="${link}">click to recover your password</a>
-      `
-  }
+      `,
+  };
   transport.sendMail(mailDetails, (error, data) => {
-      if (error) {
-          error.message = "Internal Server Error"
-          next(error)
-      } else res.status(200).json({ message: `Hi ${user.name}, we've sent an email with instructions to ${user.email}` })
-  })
-
-}
+    if (error) {
+      error.message = "Internal Server Error";
+      next(error);
+    } else
+      res
+        .status(200)
+        .json({
+          message: `Hi ${user.name}, we've sent an email with instructions to ${user.email}`,
+        });
+  });
+};
 
 //Form reset pass
-const reset = async(req, res, next) => {
-  const { token } = req.params
-  const tokenStatus = await tokenVerify(token)
+const reset = async (req, res, next) => {
+  const { token } = req.params;
+  const tokenStatus = await tokenVerify(token);
   if (tokenStatus instanceof Error) {
-      res.send(tokenStatus)
-  } else res.render("reset", { tokenStatus, token })
-}
+    res.send(tokenStatus);
+  } else res.render("reset", { tokenStatus, token });
+};
 
 const saveNewPass = async (req, res, next) => {
-  const { token } = req.params
-  const tokenStatus = await tokenVerify(token)
-  if(tokenStatus instanceof Error) return res.send(tokenStatus)
-  const  newPassword = await encrypt(req.body.password_1)
-  const dbResponse =  await editUserById(tokenStatus.id, {password: newPassword})
-  dbResponse instanceof Error ? next(dbResponse) : res.status(200).json({message: `Password changed for user ${tokenStatus.name}`})
-
-}
+  const { token } = req.params;
+  const tokenStatus = await tokenVerify(token);
+  if (tokenStatus instanceof Error) return res.send(tokenStatus);
+  const newPassword = await encrypt(req.body.password_1);
+  const dbResponse = await editUserById(tokenStatus.id, {
+    password: newPassword,
+  });
+  dbResponse instanceof Error
+    ? next(dbResponse)
+    : res
+        .status(200)
+        .json({ message: `Password changed for user ${tokenStatus.name}` });
+};
 
 //Edit one
 const editOne = async (req, res, next) => {
@@ -169,7 +180,6 @@ module.exports = {
   editOne,
   login,
   forgot,
-  reset, 
-  saveNewPass
-
+  reset,
+  saveNewPass,
 };
