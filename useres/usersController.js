@@ -49,7 +49,7 @@ const showOne = async (req, res, next) => {
 //New user
 const createOne = async (req, res, next) => {
   const cleanBody = matchedData(req);
-  const image = `${public_url}/${req.file.filename}`;
+  const image = public_url + req.file.filename
   const password = await encrypt(req.body.password);
   const dbResponse = await addNewUser({ ...cleanBody, password, image });
   if (dbResponse instanceof Error) return next(dbResponse);
@@ -103,7 +103,7 @@ const forgot = async(req, res, next) => {
       email: dbResponse[0].email
   }
   const token = await tokenSign(user, '15m')
-  const link = `${public_url}/users/reset/${token}`
+  const link = `${public_url}users/reset/${token}`
 
   let mailDetails = {
       from: "aasd@sasd.com",
