@@ -20,16 +20,19 @@ server.set("view engine", "hbs");
 server.set("views", path.join("./views")) 
 server.engine("hbs", hbs.engine({ extname: "hbs" }))
 
+
 server.listen(port, (err) => {
   err
     ? console.warn(`Hubo un error {
       message: ${err} }`)
     : console.log(`Servidor corre en http://localhost:${port}`);
 });
+
+
 //Endpoints
 server.get("/", (req, res) => {
   const content = `
-    <h1>API whit Express</h1>
+    <h1>Integrador</h1>
     <pre>Buenas tardes MUNDO</pre>`;
   res.send(content);
 });
